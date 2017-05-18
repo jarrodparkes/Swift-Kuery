@@ -84,8 +84,8 @@ class TestUpdate: XCTestCase {
     func testUpdateAndDeleteWith() {
         let t = MyTable()
         let t2 = MyTable2()
-        let connection = createConnection()
-        let connection2 = createConnection(withDeleteRequiresUsing: true, withUpdateRequiresFrom: true)
+        let connection = createConnection(name: "withoutUsingAndFrom")
+        let connection2 = createConnection(name: "withUsingAndFrom", withDeleteRequiresUsing: true, withUpdateRequiresFrom: true)
 
         class AuxTable: AuxiliaryTable {
             let tableName = "aux_table"

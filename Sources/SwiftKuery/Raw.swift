@@ -18,7 +18,7 @@
 
 /// An arbitrary query represented by a String. The generated query will be a concatenation of the 
 /// supplied query string and tables.
-public struct Raw: Query {
+public class Raw: Query {
     /// A String containing the query.
     public let query: String
     
@@ -29,7 +29,7 @@ public struct Raw: Query {
     ///
     /// - Parameter query: A String containing the query.
     /// - Parameter table: The table(s) to apply the query on.
-    public init(query: String, table: Table...) {
+    public convenience init(query: String, table: Table...) {
         self.init(query: query, tables: table)
     }
 
@@ -47,7 +47,12 @@ public struct Raw: Query {
     /// - Parameter queryBuilder: The QueryBuilder to use.
     /// - Returns: A String representation of the query.
     /// - Throws: QueryError.syntaxError if query build fails.
-    public func build(queryBuilder: QueryBuilder) throws -> String {
-        return try query + " " + "\(tables.map { try $0.build(queryBuilder: queryBuilder) }.joined(separator: ", "))"
+    public override func build(queryBuilder: QueryBuilder) throws -> String {
+        if let cachedQuery = cachedQuery, cachedQuery.queryBuilderName == queryBuilder.name {
+            return cachedQuery.query
+        }
+        let result =  try query + " " + "\(tables.map { try $0.build(queryBuilder: queryBuilder) }.joined(separator: ", "))"
+        cachedQuery = CachedQuery(query: result, queryBuilderName: queryBuilder.name)
+        return result
     }
 }

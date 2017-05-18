@@ -17,7 +17,7 @@
 // MARK: Delete
 
 /// The SQL DELETE statement.
-public struct Delete: Query {
+public class Delete: Query {
     /// The table to delete rows from.
     public let table: Table
 
@@ -47,12 +47,17 @@ public struct Delete: Query {
     /// - Parameter queryBuilder: The QueryBuilder to use.
     /// - Returns: A String representation of the query.
     /// - Throws: QueryError.syntaxError if query build fails.
-    public func build(queryBuilder: QueryBuilder) throws -> String {
+    public override func build(queryBuilder: QueryBuilder) throws -> String {
+        if let cachedQuery = cachedQuery, cachedQuery.queryBuilderName == queryBuilder.name {
+            return cachedQuery.query
+        }
+
         if syntaxError != "" {
             throw QueryError.syntaxError(syntaxError)
         }
         
         var result = ""
+        result.reserveCapacity(200)
         
         if let with = with {
             result += "WITH "
@@ -76,6 +81,7 @@ public struct Delete: Query {
             result += try " " + suffix.build(queryBuilder: queryBuilder)
         }
         result = Utils.updateParameterNumbers(query: result, queryBuilder: queryBuilder)
+        cachedQuery = CachedQuery(query: result, queryBuilderName: queryBuilder.name)
         return result
     }
     
@@ -84,14 +90,14 @@ public struct Delete: Query {
     /// - Parameter conditions: The `Filter` clause or a `String` containing SQL WHERE clause to apply.
     /// - Returns: A new instance of Delete.
     public func `where`(_ conditions: QueryFilterProtocol) -> Delete {
-        var new = self
+        cachedQuery = nil
         if whereClause != nil {
-            new.syntaxError += "Multiple where clauses. "
+            syntaxError += "Multiple where clauses. "
         }
         else {
-            new.whereClause = conditions
+            whereClause = conditions
         }
-        return new
+        return self
     }
     
     /// Add a raw suffix to the delete statement.
@@ -99,14 +105,14 @@ public struct Delete: Query {
     /// - Parameter raw: A String with a clause to be appended to the end of the query.
     /// - Returns: A new instance of Delete.
     public func suffix(_ raw: String) -> Delete {
-        var new = self
+        cachedQuery = nil
         if suffix != nil {
-            new.syntaxError += "Multiple suffixes. "
+            syntaxError += "Multiple suffixes. "
         }
         else {
-            new.suffix = raw
+            suffix = raw
         }
-        return new
+        return self
     }
 
     /// Set tables to be used for WITH clause.
@@ -114,13 +120,13 @@ public struct Delete: Query {
     /// - Parameter tables: A list of the `AuxiliaryTable` to apply.
     /// - Returns: A new instance of Delete with tables for WITH clause.
     func with(_ tables: [AuxiliaryTable]) -> Delete {
-        var new = self
-        if new.with != nil {
-            new.syntaxError += "Multiple with clauses. "
+        cachedQuery = nil
+        if with != nil {
+            syntaxError += "Multiple with clauses. "
         }
         else {
-            new.with = tables
+            with = tables
         }
-        return new
+        return self
     }
 }

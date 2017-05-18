@@ -130,6 +130,7 @@ public extension Connection {
                     onCompletion(.error(QueryError.syntaxError("Failed to map parameters.")))
                 }
             }
+            query.cachedQuery = CachedQuery(query: convertedQuery, queryBuilderName: queryBuilder.name)
             execute(convertedQuery, parameters: numberedParameters, onCompletion: onCompletion)
         }
         catch  QueryError.syntaxError(let error) {

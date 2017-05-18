@@ -16,11 +16,10 @@
 
 // MARK: Query protocol
 
-/// Defines the protocol for queries.
-public protocol Query: Buildable {
-}
+/// A base class for queries.
+public class Query: Buildable {
+    var cachedQuery: CachedQuery?
 
-public extension Query {
     /// Execute the query.
     ///
     /// - Parameter connection: The plugin that implements the Connection protocol and executes the query.
@@ -34,7 +33,30 @@ public extension Query {
     /// - Parameter connection: The plugin that implements the Connection protocol and executes the query.
     /// - Parameter parameters: An array of the query parameters.
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed.
-    public func execute(_ connection: Connection, parameters: [Any], onCompletion: @escaping ((QueryResult) -> ())) {
+    public func execute(_ connection: Connection, parameters: [Any?], onCompletion: @escaping ((QueryResult) -> ())) {
         connection.execute(query: self, parameters: parameters, onCompletion: onCompletion)
     }
+    
+    /// Execute the query with parameters.
+    ///
+    /// - Parameter connection: The plugin that implements the Connection protocol and executes the query.
+    /// - Parameter parameters: A dictionary of the parameters with parameter names as the keys.
+    /// - Parameter onCompletion: The function to be called when the execution of the query has completed.
+    public func execute(_ connection: Connection, parameters: [String:Any?], onCompletion: @escaping ((QueryResult) -> ())) {
+        connection.execute(query: self, parameters: parameters, onCompletion: onCompletion)
+    }
+    
+    /// Build the query using `QueryBuilder`.
+    ///
+    /// - Parameter queryBuilder: The QueryBuilder to use.
+    /// - Returns: A String representation of the query.
+    /// - Throws: QueryError.syntaxError if query build fails.
+    public func build(queryBuilder: QueryBuilder) throws -> String {
+        return ""
+    }
+}
+
+struct CachedQuery {
+    var query: String
+    var queryBuilderName: String
 }

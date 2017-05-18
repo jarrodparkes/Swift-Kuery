@@ -17,7 +17,7 @@
 // MARK: Insert
 
 /// The SQL INSERT statement.
-public struct Insert: Query {
+public class Insert: Query {
     /// The table to insert rows.
     public let table: Table
     
@@ -37,7 +37,7 @@ public struct Insert: Query {
     public private (set) var with: [AuxiliaryTable]?
     
     private var syntaxError = ""
-    
+
     /// Initialize an instance of Insert.
     ///
     /// - Parameter into: The table to insert rows.
@@ -76,7 +76,7 @@ public struct Insert: Query {
     ///
     /// - Parameter into: The table to insert rows.
     /// - Parameter values: A list of values (the row) to insert.
-    public init(into table: Table, values: Any...) {
+    public convenience init(into table: Table, values: Any...) {
         self.init(into: table, columns: nil, values: values)
     }
     
@@ -84,7 +84,7 @@ public struct Insert: Query {
     ///
     /// - Parameter into: The table to insert rows.
     /// - Parameter values: An array of values (the row) to insert.
-    public init(into table: Table, values: [Any]) {
+    public convenience init(into table: Table, values: [Any]) {
         self.init(into: table, columns: nil, values: values)
     }
 
@@ -92,7 +92,7 @@ public struct Insert: Query {
     ///
     /// - Parameter into: The table to insert rows.
     /// - Parameter valueTuples: An array of (column, value) pairs to insert.
-    public init(into table: Table, valueTuples: [(Column, Any)]) {
+    public convenience init(into table: Table, valueTuples: [(Column, Any)]) {
         var columnsArray = Array<Column>()
         var valuesArray = Array<Any>()
         for (column, value) in valueTuples {
@@ -106,7 +106,7 @@ public struct Insert: Query {
     ///
     /// - Parameter into: The table to insert rows.
     /// - Parameter valueTuples: A list of (column, value) pairs to insert.
-    public init(into table: Table, valueTuples: (Column, Any)...) {
+    public convenience init(into table: Table, valueTuples: (Column, Any)...) {
         self.init(into: table, valueTuples: valueTuples)
     }
 
@@ -130,12 +130,17 @@ public struct Insert: Query {
     /// - Parameter queryBuilder: The QueryBuilder to use.
     /// - Returns: A String representation of the query.
     /// - Throws: QueryError.syntaxError if query build fails.
-    public func build(queryBuilder: QueryBuilder) throws -> String {
+    public override func build(queryBuilder: QueryBuilder) throws -> String {
+        if let cachedQuery = cachedQuery, cachedQuery.queryBuilderName == queryBuilder.name {
+            return cachedQuery.query
+        }
+
         if syntaxError != "" {
             throw QueryError.syntaxError(syntaxError)
         }
         
         var result = ""
+        result.reserveCapacity(200)
         
         if let with = with {
             result += "WITH "
@@ -164,6 +169,7 @@ public struct Insert: Query {
             result += try " " + suffix.build(queryBuilder: queryBuilder)
         }
         result = Utils.updateParameterNumbers(query: result, queryBuilder: queryBuilder)
+        cachedQuery = CachedQuery(query: result, queryBuilderName: queryBuilder.name)
         return result
     }
     
@@ -172,14 +178,14 @@ public struct Insert: Query {
     /// - Parameter raw: A String with a clause to be appended to the end of the query.
     /// - Returns: A new instance of Insert.
     public func suffix(_ raw: String) -> Insert {
-        var new = self
+        cachedQuery = nil
         if suffix != nil {
-            new.syntaxError += "Multiple suffixes. "
+            syntaxError += "Multiple suffixes. "
         }
         else {
-            new.suffix = raw
+            suffix = raw
         }
-        return new
+        return self
     }
     
     /// Set tables to be used for WITH clause.
@@ -187,13 +193,13 @@ public struct Insert: Query {
     /// - Parameter tables: A list of the `AuxiliaryTable` to apply.
     /// - Returns: A new instance of Insert with tables for WITH clause.
     func with(_ tables: [AuxiliaryTable]) -> Insert {
-        var new = self
-        if new.with != nil {
-            new.syntaxError += "Multiple with clauses. "
+        cachedQuery = nil
+        if with != nil {
+            syntaxError += "Multiple with clauses. "
         }
         else {
-            new.with = tables
+            with = tables
         }
-        return new
+        return self
     }
 }

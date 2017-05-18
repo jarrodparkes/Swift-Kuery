@@ -25,8 +25,10 @@ public class QueryBuilder {
     /// An array of substitutions to be made in query String representation.
     public var substitutions: [String]
     
+    public private (set) var name: String
+    
     /// The index for the substitutions array.
-    public enum QuerySubstitutionNames : Int {
+    public enum QuerySubstitutionNames: Int {
         /// The SQL UCASE scalar function.
         case ucase
         /// The SQL LCASE scalar function.
@@ -88,7 +90,8 @@ public class QueryBuilder {
     /// - Parameter withDeleteRequiresUsing: An indication whether a `DELETE` query should use `USING` clause for tables in `WITH` clause.
     /// - Parameter withUpdateRequiresFrom: An indication whether an `UPDATE` query should use `FROM` clause for tables in `WITH` clause.
     /// - Parameter createAutoIncrement: A function to create column's autoincrement expression based on the column's type.
-    public init(addNumbersToParameters: Bool = true, firstParameterIndex: Int = 1, anyOnSubquerySupported: Bool = true, withDeleteRequiresUsing: Bool = false, withUpdateRequiresFrom: Bool = false, createAutoIncrement: ((String) -> String)? = nil) {
+    public init(name: String, addNumbersToParameters: Bool = true, firstParameterIndex: Int = 1, anyOnSubquerySupported: Bool = true, withDeleteRequiresUsing: Bool = false, withUpdateRequiresFrom: Bool = false, createAutoIncrement: ((String) -> String)? = nil) {
+        self.name = name
         substitutions = Array(repeating: "", count: QuerySubstitutionNames.namesCount.rawValue)
         substitutions[QuerySubstitutionNames.ucase.rawValue] = "UCASE"
         substitutions[QuerySubstitutionNames.lcase.rawValue] = "LCASE"

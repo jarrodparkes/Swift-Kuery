@@ -24,7 +24,7 @@ public class ConnectionPoolConnection: Connection {
  
     /// The `QueryBuilder` with connection specific substitutions.
     public var queryBuilder: QueryBuilder {
-        return connection?.queryBuilder ?? QueryBuilder()
+        return connection?.queryBuilder ?? QueryBuilder(name: "ConnectionPool")
     }
 
     init(connection: Connection, pool: ConnectionPool) {

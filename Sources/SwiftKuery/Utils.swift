@@ -90,7 +90,7 @@ struct Utils {
                 resultQuery += "\(index)"
             }
             let nameRange = startRange!.upperBound..<endRange!.lowerBound
-            let name = inputQuery.substring(with: nameRange)
+            let name: Range<String.Index> = inputQuery.substring(with: nameRange)
             if let _ = nameToNumber[name] {
                 nameToNumber[name]!.append(index)
             }
